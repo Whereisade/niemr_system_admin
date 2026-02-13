@@ -11,7 +11,7 @@ const items = [
   { href: "/approvals/facilities", label: "Facilities", icon: Building2 },
   { href: "/approvals/providers", label: "Providers", icon: CheckCircle2 },
   { href: "/users", label: "Users", icon: Users2 },
-  { href: "/audit", label: "Audit Logs", icon: FileSearch },
+  
 ];
 
 export default function Sidebar() {

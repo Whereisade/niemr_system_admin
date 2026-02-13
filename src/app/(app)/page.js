@@ -48,13 +48,13 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card title="Notes">
+      {/* <Card title="Notes">
         <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
           <li>Facilities approval uses <code className="rounded bg-slate-100 px-1">/api/system-admin/facilities</code>.</li>
           <li>Providers approval uses existing <code className="rounded bg-slate-100 px-1">/api/providers</code> approve/reject actions.</li>
           <li>Audit logs are already scoped: app SUPER_ADMIN with no facility sees everything.</li>
         </ul>
-      </Card>
+      </Card> */}
     </div>
   );
 }

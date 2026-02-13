@@ -13,8 +13,8 @@ import { qs, formatDate } from "@/lib/format";
 export default function FacilityApprovalsPage() {
   const router = useRouter();
   const [q, setQ] = useState("");
-  // Facilities are PENDING approval by default (login blocked until approved)
-  const [approved, setApproved] = useState("false"); // show pending by default
+  // Facilities are PENDING by default (login blocked until approved)
+  const [status, setStatus] = useState("PENDING");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [data, setData] = useState({ count: 0, results: [] });
@@ -23,7 +23,14 @@ export default function FacilityApprovalsPage() {
     setBusy(true);
     setErr("");
     try {
-      const query = qs({ q, is_approved: approved, limit: 50 });
+      const params = { q, limit: 50 };
+      if (status === "APPROVED") params.is_approved = "true";
+      if (status === "REJECTED") params.is_rejected = "true";
+      if (status === "PENDING") {
+        params.is_approved = "false";
+        params.is_rejected = "false";
+      }
+      const query = qs(params);
       const res = await apiFetch(`system-admin/facilities/?${query}`);
       setData(res);
     } catch (e) {
@@ -33,7 +40,7 @@ export default function FacilityApprovalsPage() {
     }
   }
 
-  useEffect(() => { load(); }, [approved]);
+  useEffect(() => { load(); }, [status]);
 
   const columns = useMemo(() => [
     { key: "name", header: "Facility", cell: (r) => <div className="font-medium text-slate-900">{r.name}</div> },
@@ -42,7 +49,13 @@ export default function FacilityApprovalsPage() {
     {
       key: "is_approved",
       header: "Approval",
-      cell: (r) => (r.is_approved ? <Badge tone="green">APPROVED</Badge> : <Badge tone="yellow">PENDING</Badge>),
+      cell: (r) => (
+        r.is_rejected
+          ? <Badge tone="red">REJECTED</Badge>
+          : r.is_approved
+          ? <Badge tone="green">APPROVED</Badge>
+          : <Badge tone="yellow">PENDING</Badge>
+      ),
     },
     {
       key: "is_publicly_visible",
@@ -60,10 +73,11 @@ export default function FacilityApprovalsPage() {
           <div className="flex items-end gap-2">
             <div className="w-72"><Input label="Search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="name, email, state..." /></div>
             <div className="w-48">
-              <Select label="Approval" value={approved} onChange={(e) => setApproved(e.target.value)}>
-                <option value="false">Pending</option>
+              <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
                 <option value="">All</option>
-                <option value="true">Approved</option>
               </Select>
             </div>
             <button

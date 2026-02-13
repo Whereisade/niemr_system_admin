@@ -33,6 +33,7 @@ export default function FacilityApprovalDetail() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [confirm, setConfirm] = useState({ open: false, action: null });
+  const [rejectReason, setRejectReason] = useState("");
 
   async function loadFacility() {
     setBusy(true);
@@ -63,14 +64,15 @@ export default function FacilityApprovalDetail() {
   const visibilityTone = facility?.is_publicly_visible ? "green" : "yellow";
   const visibilityLabel = facility?.is_publicly_visible ? "VISIBLE" : "HIDDEN";
 
-  const approvalTone = facility?.is_approved ? "green" : "yellow";
-  const approvalLabel = facility?.is_approved ? "APPROVED" : "PENDING";
+  const approvalTone = facility?.is_rejected ? "red" : facility?.is_approved ? "green" : "yellow";
+  const approvalLabel = facility?.is_rejected ? "REJECTED" : facility?.is_approved ? "APPROVED" : "PENDING";
 
   async function act(kind) {
     setBusy(true);
     setErr("");
     try {
       if (kind === "approve") await apiFetch(`system-admin/facilities/${id}/approve/`, { method: "POST" });
+      if (kind === "reject") await apiFetch(`system-admin/facilities/${id}/reject/`, { method: "POST", body: { reason: rejectReason } });
       if (kind === "unapprove") await apiFetch(`system-admin/facilities/${id}/unapprove/`, { method: "POST" });
       if (kind === "show") await apiFetch(`system-admin/facilities/${id}/show/`, { method: "POST" });
       if (kind === "hide") await apiFetch(`system-admin/facilities/${id}/hide/`, { method: "POST" });
@@ -80,6 +82,7 @@ export default function FacilityApprovalDetail() {
     } finally {
       setBusy(false);
       setConfirm({ open: false, action: null });
+      if (kind === "reject") setRejectReason("");
     }
   }
 
@@ -135,10 +138,15 @@ export default function FacilityApprovalDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => router.push(`/audit?s=${encodeURIComponent(facility?.name || "")}`)}>Audit logs</Button>
+          
           <Button variant="secondary" onClick={toggleActive} disabled={busy}>
             {facility?.is_active ? "Deactivate facility" : "Activate facility"}
           </Button>
+          {facility?.is_rejected ? null : (
+            <Button variant="danger" onClick={() => setConfirm({ open: true, action: "reject" })} disabled={busy}>
+              Reject
+            </Button>
+          )}
           {facility?.is_approved ? (
             <>
               <Button variant="danger" onClick={() => setConfirm({ open: true, action: "unapprove" })} disabled={busy}>
@@ -172,6 +180,12 @@ export default function FacilityApprovalDetail() {
             <div><dt className="text-xs text-slate-500">Updated</dt><dd className="font-medium">{formatDate(facility?.updated_at)}</dd></div>
             <div><dt className="text-xs text-slate-500">Approval</dt><dd className="font-medium"><Badge tone={approvalTone}>{approvalLabel}</Badge></dd></div>
             <div><dt className="text-xs text-slate-500">Approved at</dt><dd className="font-medium">{formatDate(facility?.approved_at)}</dd></div>
+            {facility?.is_rejected ? (
+              <>
+                <div className="col-span-2"><dt className="text-xs text-slate-500">Rejection reason</dt><dd className="font-medium">{facility?.rejection_reason || "—"}</dd></div>
+                <div><dt className="text-xs text-slate-500">Rejected at</dt><dd className="font-medium">{formatDate(facility?.rejected_at)}</dd></div>
+              </>
+            ) : null}
           </dl>
         </Card>
 
@@ -239,6 +253,8 @@ export default function FacilityApprovalDetail() {
         title={
           confirm.action === "approve"
             ? "Approve facility?"
+            : confirm.action === "reject"
+            ? "Reject facility?"
             : confirm.action === "unapprove"
             ? "Unapprove facility?"
             : confirm.action === "show"
@@ -248,6 +264,19 @@ export default function FacilityApprovalDetail() {
         description={
           confirm.action === "approve"
             ? "This will approve the facility (unlock login) and make it publicly visible/bookable."
+            : confirm.action === "reject"
+            ? (
+              <div className="space-y-2">
+                <div>Rejecting will block facility logins and hide it from public search.</div>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-100"
+                  placeholder="Reason (will be emailed to the applicant)"
+                />
+              </div>
+            )
             : confirm.action === "unapprove"
             ? "This will block facility logins and hide it from public search."
             : confirm.action === "show"
@@ -257,6 +286,8 @@ export default function FacilityApprovalDetail() {
         confirmText={
           confirm.action === "approve"
             ? "Approve"
+            : confirm.action === "reject"
+            ? "Reject"
             : confirm.action === "unapprove"
             ? "Unapprove"
             : confirm.action === "show"

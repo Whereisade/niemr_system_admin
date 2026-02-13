@@ -107,14 +107,23 @@ export default function ProviderApprovalDetail() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => router.push(`/audit?s=${encodeURIComponent(provider?.email || "")}`)}>Audit logs</Button>
+          
           {provider?.user ? (
             <Button variant="secondary" onClick={toggleLinkedUser}>
               {provider?.is_active ? "Deactivate account" : "Activate account"}
             </Button>
           ) : null}
           {status !== "REJECTED" ? (
-            <Button variant="danger" onClick={() => setConfirm({ open: true, action: "reject" })} disabled={busy}>Reject</Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setRejectReason("");
+                setConfirm({ open: true, action: "reject" });
+              }}
+              disabled={busy}
+            >
+              Reject
+            </Button>
           ) : null}
           {status !== "APPROVED" ? (
             <Button variant="primary" onClick={() => setConfirm({ open: true, action: "approve" })} disabled={busy}>Approve</Button>
@@ -134,6 +143,12 @@ export default function ProviderApprovalDetail() {
             <div className="col-span-2"><dt className="text-xs text-slate-500">Bio</dt><dd className="font-medium">{provider?.bio || "—"}</dd></div>
             <div><dt className="text-xs text-slate-500">Created</dt><dd className="font-medium">{formatDate(provider?.created_at)}</dd></div>
             <div><dt className="text-xs text-slate-500">Verified at</dt><dd className="font-medium">{formatDate(provider?.verified_at)}</dd></div>
+            {status === "REJECTED" ? (
+              <div className="col-span-2">
+                <dt className="text-xs text-slate-500">Rejection reason</dt>
+                <dd className="font-medium">{provider?.rejection_reason || "—"}</dd>
+              </div>
+            ) : null}
           </dl>
         </Card>
 
@@ -170,7 +185,7 @@ export default function ProviderApprovalDetail() {
                   onChange={(e) => setRejectReason(e.target.value)}
                   rows={3}
                   className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-100"
-                  placeholder="Reason (optional)"
+                  placeholder="Reason (will be emailed to the applicant)"
                 />
               </div>
             )

@@ -21,10 +21,10 @@ export default function LoginPage() {
     setBusy(true);
     try {
       // Backend enforces strict portal boundaries.
-      // System Admin console users authenticate through the OUTREACH portal group.
+      // System Admin console users authenticate through the SYSTEM_ADMIN portal group.
       const data = await apiFetch("accounts/login/", {
         method: "POST",
-        body: { email, password, portal: "outreach" },
+        body: { email, password, portal: "system_admin" },
       });
 
       // NIEMR backend returns: { tokens: { access, refresh }, user: {...} }
