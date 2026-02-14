@@ -161,9 +161,7 @@ export default function ProviderApprovalDetail() {
             <div><dt className="text-xs text-slate-500">Visibility</dt><dd className="font-medium">{provider?.is_publicly_visible ? <Badge tone="green">VISIBLE</Badge> : <Badge tone="yellow">HIDDEN</Badge>}</dd></div>
             <div><dt className="text-xs text-slate-500">Sacked</dt><dd className="font-medium">{provider?.is_sacked ? <Badge tone="red">SACKED</Badge> : <Badge tone="slate">NO</Badge>}</dd></div>
           </dl>
-          <div className="mt-3 text-xs text-slate-500">
-            Note: Activate/deactivate uses <code className="rounded bg-slate-100 px-1">/api/system-admin/users/:id</code>.
-          </div>
+          
         </Card>
       </div>
 

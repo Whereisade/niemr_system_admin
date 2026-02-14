@@ -11,11 +11,13 @@ import { apiFetch } from "@/lib/api";
 import { qs, formatDate } from "@/lib/format";
 
 export default function UsersPage() {
+  const PAGE_SIZE = 50;
   const router = useRouter();
   const [q, setQ] = useState("");
   const [role, setRole] = useState("");
   const [facility, setFacility] = useState("");
   const [isActive, setIsActive] = useState("");
+  const [offset, setOffset] = useState(0);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [data, setData] = useState({ count: 0, results: [] });
@@ -28,11 +30,11 @@ export default function UsersPage() {
     } catch {}
   }
 
-  async function load() {
+  async function load(nextOffset = offset) {
     setBusy(true);
     setErr("");
     try {
-      const query = qs({ q, role, facility, is_active: isActive, limit: 50 });
+      const query = qs({ q, role, facility, is_active: isActive, limit: PAGE_SIZE, offset: nextOffset });
       const res = await apiFetch(`system-admin/users/?${query}`);
       setData(res);
     } catch (e) {
@@ -43,6 +45,12 @@ export default function UsersPage() {
   }
 
   useEffect(() => { loadFacilities(); load(); }, []);
+
+  const total = data?.count ?? 0;
+  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const hasPrevious = offset > 0;
+  const hasNext = Boolean(data?.next) || (offset + (data?.results?.length || 0) < total);
 
   const columns = useMemo(() => [
     { key: "email", header: "Email", cell: (u) => <div className="font-medium text-slate-900">{u.email}</div> },
@@ -89,7 +97,10 @@ export default function UsersPage() {
             </div>
             <button
               className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800"
-              onClick={load}
+              onClick={() => {
+                setOffset(0);
+                load(0);
+              }}
               disabled={busy}
             >
               {busy ? "Loading..." : "Search"}
@@ -99,7 +110,34 @@ export default function UsersPage() {
       >
         {err ? <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
         <Table columns={columns} rows={data?.results || []} rowKey={(u) => u.id} onRowClick={(u) => router.push(`/users/${u.id}`)} />
-        <div className="mt-3 text-xs text-slate-500">{data?.count ?? 0} total</div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="text-xs text-slate-500">{total} total</div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Page {currentPage} of {totalPages}</span>
+            <button
+              className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => {
+                const nextOffset = Math.max(0, offset - PAGE_SIZE);
+                setOffset(nextOffset);
+                load(nextOffset);
+              }}
+              disabled={busy || !hasPrevious}
+            >
+              Previous
+            </button>
+            <button
+              className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => {
+                const nextOffset = offset + PAGE_SIZE;
+                setOffset(nextOffset);
+                load(nextOffset);
+              }}
+              disabled={busy || !hasNext}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </Card>
     </div>
   );

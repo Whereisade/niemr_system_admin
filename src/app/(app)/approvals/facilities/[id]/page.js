@@ -142,11 +142,11 @@ export default function FacilityApprovalDetail() {
           <Button variant="secondary" onClick={toggleActive} disabled={busy}>
             {facility?.is_active ? "Deactivate facility" : "Activate facility"}
           </Button>
-          {facility?.is_rejected ? null : (
+          {!facility?.is_rejected && !facility?.is_approved ? (
             <Button variant="danger" onClick={() => setConfirm({ open: true, action: "reject" })} disabled={busy}>
               Reject
             </Button>
-          )}
+          ) : null}
           {facility?.is_approved ? (
             <>
               <Button variant="danger" onClick={() => setConfirm({ open: true, action: "unapprove" })} disabled={busy}>
