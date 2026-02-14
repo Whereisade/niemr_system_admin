@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@/components/Card";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import { apiFetch } from "@/lib/api";
-import { setTokens } from "@/lib/auth";
+import { getToken, setTokens } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +14,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    // If already logged in, skip the login screen.
+    if (getToken()) router.replace("/dashboard");
+  }, [router]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -43,7 +48,7 @@ export default function LoginPage() {
       if (!access) throw new Error("Login succeeded but token not found.");
 
       setTokens({ access, refresh });
-      router.push("/");
+      router.replace("/dashboard");
     } catch (e) {
       setErr(e.message || "Login failed");
     } finally {

@@ -6,7 +6,7 @@ import { LayoutDashboard, CheckCircle2, Building2, Users2, FileSearch, Clipboard
 import { classNames } from "@/lib/format";
 
 const items = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/approvals", label: "Approvals Queue", icon: ClipboardList },
   { href: "/approvals/facilities", label: "Facilities", icon: Building2 },
   { href: "/approvals/providers", label: "Providers", icon: CheckCircle2 },
@@ -26,7 +26,7 @@ export default function Sidebar() {
 
       <nav className="px-3 pb-5">
         {items.map((it) => {
-          const active = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
+          const active = pathname === it.href || (it.href !== "/dashboard" && pathname.startsWith(it.href));
           const Icon = it.icon;
           return (
             <Link
