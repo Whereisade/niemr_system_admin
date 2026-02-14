@@ -29,6 +29,10 @@ async function proxy(req, params) {
   // Avoid forwarding content-length from the browser because we may not forward the body verbatim.
   // Keeping the old content-length can cause POSTs with empty bodies (e.g. approve/unapprove) to fail silently.
   headers.delete("content-length");
+  // Let the platform handle compression between browser <-> Vercel.
+  // Forwarding accept-encoding to the backend can lead to mismatched encoding/length headers.
+  headers.delete("accept-encoding");
+  headers.set("accept", "application/json");
 
   const init = {
     method: req.method,
@@ -48,6 +52,10 @@ async function proxy(req, params) {
   const res = await fetch(url, init);
 
   const resHeaders = new Headers(res.headers);
+  // Avoid passing through encoding/length headers that may not match the proxied stream.
+  resHeaders.delete("content-encoding");
+  resHeaders.delete("content-length");
+  resHeaders.delete("transfer-encoding");
   // Basic CORS-friendly header passthrough (client uses same-origin anyway)
   resHeaders.set("x-proxied-by", "nextjs");
 

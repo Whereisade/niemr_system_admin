@@ -60,7 +60,23 @@ export async function apiFetch(path, opts = {}) {
     if (contentType.includes("application/json")) {
       data = await res.json().catch(() => null);
     } else {
-      data = await res.text().catch(() => null);
+      // Some proxies/CDNs occasionally strip or mislabel content-type.
+      // If it *looks* like JSON, try to parse it so token extraction works.
+      const text = await res.text().catch(() => null);
+      if (typeof text === "string") {
+        const trimmed = text.trim();
+        if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+          try {
+            data = JSON.parse(trimmed);
+          } catch {
+            data = text;
+          }
+        } else {
+          data = text;
+        }
+      } else {
+        data = text;
+      }
     }
 
     if (!res.ok) {

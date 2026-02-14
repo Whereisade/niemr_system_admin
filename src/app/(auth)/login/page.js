@@ -32,20 +32,45 @@ export default function LoginPage() {
         body: { email, password, portal: "system_admin" },
       });
 
+      // Defensive: if the response was returned as a string (e.g., mislabelled content-type),
+      // attempt to parse it so we can still extract tokens.
+      let payload = data;
+      if (typeof data === "string") {
+        const t = data.trim();
+        if (t.startsWith("{") || t.startsWith("[")) {
+          try {
+            payload = JSON.parse(t);
+          } catch {
+            payload = data;
+          }
+        }
+      }
+
       // NIEMR backend returns: { tokens: { access, refresh }, user: {...} }
       const access =
-        data?.tokens?.access ||
-        data?.access ||
-        data?.token ||
-        data?.jwt ||
+        payload?.tokens?.access ||
+        payload?.access ||
+        payload?.access_token ||
+        payload?.accessToken ||
+        payload?.token ||
+        payload?.jwt ||
         null;
 
       const refresh =
-        data?.tokens?.refresh ||
-        data?.refresh ||
+        payload?.tokens?.refresh ||
+        payload?.refresh ||
+        payload?.refresh_token ||
+        payload?.refreshToken ||
         null;
 
-      if (!access) throw new Error("Login succeeded but token not found.");
+      if (!access) {
+        // Help debug misconfig in production (e.g. proxy hitting the wrong base URL).
+        const hint =
+          typeof payload === "string"
+            ? `Response (first 200 chars): ${payload.slice(0, 200)}`
+            : `Response keys: ${payload ? Object.keys(payload).join(", ") : "<empty>"}`;
+        throw new Error(`Login succeeded but token not found. ${hint}`);
+      }
 
       setTokens({ access, refresh });
       router.replace("/dashboard");
