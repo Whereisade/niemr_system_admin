@@ -156,6 +156,7 @@ export default function ProviderApprovalDetail() {
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div><dt className="text-xs text-slate-500">Email</dt><dd className="font-medium">{provider?.email || "—"}</dd></div>
             <div><dt className="text-xs text-slate-500">Active</dt><dd className="font-medium">{provider?.is_active ? <Badge tone="green">ACTIVE</Badge> : <Badge tone="red">INACTIVE</Badge>}</dd></div>
+            <div><dt className="text-xs text-slate-500">Category</dt><dd className="font-medium">{provider?.provider_source === "FACILITY_LINKED" ? "Facility-linked" : "Independent"}</dd></div>
             <div><dt className="text-xs text-slate-500">User role</dt><dd className="font-medium">{provider?.user_role || "—"}</dd></div>
             <div><dt className="text-xs text-slate-500">Facility</dt><dd className="font-medium">{provider?.facility_name || "Independent"}</dd></div>
             <div><dt className="text-xs text-slate-500">Visibility</dt><dd className="font-medium">{provider?.is_publicly_visible ? <Badge tone="green">VISIBLE</Badge> : <Badge tone="yellow">HIDDEN</Badge>}</dd></div>

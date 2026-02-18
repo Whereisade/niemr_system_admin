@@ -13,6 +13,7 @@ import { qs, formatDate } from "@/lib/format";
 export default function ProviderApprovalsPage() {
   const router = useRouter();
   const [q, setQ] = useState("");
+  const [category, setCategory] = useState("INDEPENDENT");
   // Independent providers are auto-approved by default now.
   const [status, setStatus] = useState("APPROVED");
   const [busy, setBusy] = useState(false);
@@ -23,7 +24,8 @@ export default function ProviderApprovalsPage() {
     setBusy(true);
     setErr("");
     try {
-      const query = qs({ s: q, status, limit: 50 });
+      const facility = category === "FACILITY_LINKED" ? "linked" : "none";
+      const query = qs({ s: q, status, facility, limit: 50 });
       const res = await apiFetch(`providers/?${query}`);
       // NOTE: /api/providers/ is not paginated in this backend (it returns an array).
       // Normalize so the UI can render regardless of pagination config.
@@ -41,10 +43,28 @@ export default function ProviderApprovalsPage() {
     }
   }
 
-  useEffect(() => { load(); }, [status]);
+  useEffect(() => { load(); }, [status, category]);
 
   const columns = useMemo(() => [
-    { key: "display_name", header: "Provider", cell: (r) => <div className="font-medium text-slate-900">{r.display_name || r.email}</div> },
+    {
+      key: "display_name",
+      header: "Provider",
+      cell: (r) => (
+        <div>
+          <div className="font-medium text-slate-900">{r.display_name || r.email}</div>
+          <div className="text-xs text-slate-500">{r.email}</div>
+        </div>
+      ),
+    },
+    {
+      key: "provider_source",
+      header: "Category",
+      cell: (r) => (
+        r.provider_source === "FACILITY_LINKED"
+          ? <Badge tone="slate">FACILITY-LINKED</Badge>
+          : <Badge tone="slate">INDEPENDENT</Badge>
+      ),
+    },
     { key: "provider_type", header: "Type", cell: (r) => r.provider_type || "—" },
     { key: "state", header: "State", cell: (r) => r.state || "—" },
     { key: "facility_name", header: "Facility", cell: (r) => r.facility_name || "Independent" },
@@ -67,6 +87,12 @@ export default function ProviderApprovalsPage() {
         actions={
           <div className="flex items-end gap-2">
             <div className="w-72"><Input label="Search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="name, email..." /></div>
+            <div className="w-64">
+              <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="INDEPENDENT">Independent providers</option>
+                <option value="FACILITY_LINKED">Facility-linked providers</option>
+              </Select>
+            </div>
             <div className="w-48">
               <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="">ALL</option>

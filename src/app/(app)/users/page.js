@@ -17,7 +17,7 @@ export default function UsersPage() {
   const [role, setRole] = useState("");
   const [facility, setFacility] = useState("");
   const [isActive, setIsActive] = useState("");
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [data, setData] = useState({ count: 0, results: [] });
@@ -30,11 +30,12 @@ export default function UsersPage() {
     } catch {}
   }
 
-  async function load(nextOffset = offset) {
+  async function load(nextPage = page) {
     setBusy(true);
     setErr("");
     try {
-      const query = qs({ q, role, facility, is_active: isActive, limit: PAGE_SIZE, offset: nextOffset });
+      // Backend uses page-number pagination (PageNumberPagination), not offset pagination.
+      const query = qs({ q, role, facility, is_active: isActive, limit: PAGE_SIZE, page: nextPage });
       const res = await apiFetch(`system-admin/users/?${query}`);
       setData(res);
     } catch (e) {
@@ -47,10 +48,10 @@ export default function UsersPage() {
   useEffect(() => { loadFacilities(); load(); }, []);
 
   const total = data?.count ?? 0;
-  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
+  const currentPage = page;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const hasPrevious = offset > 0;
-  const hasNext = Boolean(data?.next) || (offset + (data?.results?.length || 0) < total);
+  const hasPrevious = page > 1;
+  const hasNext = Boolean(data?.next) || page < totalPages;
 
   const columns = useMemo(() => [
     { key: "email", header: "Email", cell: (u) => <div className="font-medium text-slate-900">{u.email}</div> },
@@ -98,8 +99,8 @@ export default function UsersPage() {
             <button
               className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800"
               onClick={() => {
-                setOffset(0);
-                load(0);
+                setPage(1);
+                load(1);
               }}
               disabled={busy}
             >
@@ -117,9 +118,9 @@ export default function UsersPage() {
             <button
               className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => {
-                const nextOffset = Math.max(0, offset - PAGE_SIZE);
-                setOffset(nextOffset);
-                load(nextOffset);
+                const nextPage = Math.max(1, page - 1);
+                setPage(nextPage);
+                load(nextPage);
               }}
               disabled={busy || !hasPrevious}
             >
@@ -128,9 +129,9 @@ export default function UsersPage() {
             <button
               className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => {
-                const nextOffset = offset + PAGE_SIZE;
-                setOffset(nextOffset);
-                load(nextOffset);
+                const nextPage = page + 1;
+                setPage(nextPage);
+                load(nextPage);
               }}
               disabled={busy || !hasNext}
             >

@@ -10,8 +10,8 @@ const items = [
   { href: "/approvals", label: "Approvals Queue", icon: ClipboardList },
   { href: "/approvals/facilities", label: "Facilities", icon: Building2 },
   { href: "/approvals/providers", label: "Providers", icon: CheckCircle2 },
+  { href: "/outreach", label: "Outreach", icon: FileSearch },
   { href: "/users", label: "Users", icon: Users2 },
-  
 ];
 
 export default function Sidebar() {
